@@ -7,4 +7,5 @@ dependencies = [
     "django>=6.0.3",
     "django-filter>=25.2",
     "djangorestframework>=3.17.1",
+    "gunicorn>=25.2.0",
 ]
