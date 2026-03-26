@@ -24,6 +24,9 @@ import os
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-su)#yngoj7+pqo$@kh3#cvs4!ssqdy$-s+0%!j+ze@1%209@#!')
 
+# Graceful rotation: Add old keys here to keep sessions valid during transition
+SECRET_KEY_FALLBACKS = os.environ.get('SECRET_KEY_FALLBACKS', '').split(',') if os.environ.get('SECRET_KEY_FALLBACKS') else []
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
