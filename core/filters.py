@@ -6,7 +6,6 @@ class CustomFilterBackend(DjangoFilterBackend):
         return super().filter_queryset(request, queryset, view)
 
 class CustomOrderingFilter(OrderingFilter):
-    # Change the query parameter name from 'ordering' to 'sort'
     ordering_param = 'sort'
 
     def get_ordering(self, request, queryset, view):
@@ -25,7 +24,9 @@ class CustomOrderingFilter(OrderingFilter):
                     direction = fields[i+1].lower()
                     if direction == 'desc':
                         field = f'-{field}'
-                ordering.append(field)
+                valid = self.remove_invalid_fields(queryset, [field.lstrip('-')], view, request)
+                if valid:
+                    ordering.append(field)
             
             if ordering:
                 return ordering

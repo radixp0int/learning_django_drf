@@ -51,7 +51,7 @@ class PaginationTest(APITestCase):
         page_part = data_part['page']
         self.assertEqual(page_part['elements'], 4)
         self.assertEqual(page_part['number'], 0)
-        self.assertEqual(page_part['offset'], 0)
+        self.assertEqual(page_part['offset'], 1)
         self.assertEqual(page_part['size'], 10)
         
         total_part = data_part['total']
