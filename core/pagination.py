@@ -60,7 +60,7 @@ class StandardResultsSetPagination(PageNumberPagination):
                 "page": {
                     "elements": len(data),
                     "number": self.page.number - 1,
-                    "offset": self.page.start_index() - 1,
+                    "offset": self.page.start_index(),
                     "size": self.get_page_size(request)
                 },
                 "total": {

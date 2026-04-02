@@ -19,3 +19,4 @@ staticfiles/
 
 # Project-specific
 *.log
+seed_data.py
