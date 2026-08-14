@@ -11,3 +11,55 @@ dependencies = [
     "python-dotenv>=1.2.2",
     "whitenoise>=6.12.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+    "ty>=0.0.56",
+]
+
+[tool.ruff]
+target-version = "py313"
+
+# Enable pycodestyle (E), Pyflakes (F), isort (I), and bugbear (B).
+lint.select = ["E", "F", "I", "B"]
+
+# Line length
+line-length = 100
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"**/migrations/*.py" = ["E501"]
+"django_drf/settings.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ty]
+terminal.error-on-warning = true
+terminal.output-format = "concise"
+
+[tool.ty.src]
+include = ["core", "miniapp", "analytics", "django_drf"]
+exclude = ["**/migrations", "**/__pycache__", "**/.venv", "**/node_modules", "seed_data.py"]
+
+[tool.ty.rules]
+# Known Django issues — models get .objects via metaclass, views get .paginate_queryset etc. via mixins
+# Set to "warn" if you want to see them without blocking the push.
+unresolved-attribute = "ignore"
+
+[tool.ty.analysis]
+# Django and DRF add attributes dynamically; don't fail the build on those
+allowed-unresolved-imports = ["django.**", "rest_framework.**"]
+
+[[tool.ty.overrides]]
+include = ["**/migrations/**"]
+
+[tool.ty.overrides.rules]
+all = "ignore"
+
+[[tool.ty.overrides]]
+include = ["**/tests/**"]
+
+[tool.ty.overrides.rules]
+unresolved-attribute = "ignore"

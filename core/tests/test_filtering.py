@@ -1,14 +1,17 @@
-from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework import generics
-from miniapp.models import Item, Tenant, Feedback
-from miniapp.views import ItemFilter, FeedbackFilter, ItemViewSet, FeedbackViewSet
-from core.filters import CustomOrderingFilter
 from rest_framework.serializers import ModelSerializer
+from rest_framework.test import APIRequestFactory, APITestCase
+
+from core.filtering.backends import CustomOrderingFilter
+from miniapp.models import Feedback, Item, Tenant
+from miniapp.views import FeedbackFilter, ItemFilter
+
 
 class ItemSerializer(ModelSerializer):
     class Meta:
         model = Item
         fields = '__all__'
+
 
 class ItemListView(generics.ListAPIView):
     queryset = Item.objects.all()
@@ -17,6 +20,7 @@ class ItemListView(generics.ListAPIView):
     ordering_fields = ['name', 'created_at']
     ordering = ['name']  # default ordering
     pagination_class = None  # disable global pagination for ordering-only tests
+
 
 class CustomOrderingFilterTest(APITestCase):
     def setUp(self):
@@ -71,9 +75,15 @@ class ItemFilterTest(APITestCase):
         self.item2 = Item.objects.create(name='Gadget', description='A useful gadget')
         self.item3 = Item.objects.create(name='Doohickey', description='Mysterious device')
 
-        Feedback.objects.create(item=self.item1, tenant=self.tenant_a, content='Great product', rating=5)
-        Feedback.objects.create(item=self.item2, tenant=self.tenant_b, content='Decent quality', rating=3)
-        Feedback.objects.create(item=self.item3, tenant=self.tenant_a, content='Terrible experience', rating=1)
+        Feedback.objects.create(
+            item=self.item1, tenant=self.tenant_a, content='Great product', rating=5
+        )
+        Feedback.objects.create(
+            item=self.item2, tenant=self.tenant_b, content='Decent quality', rating=3
+        )
+        Feedback.objects.create(
+            item=self.item3, tenant=self.tenant_a, content='Terrible experience', rating=1
+        )
 
     def test_filter_by_name(self):
         f = ItemFilter({'name': 'wid'}, queryset=Item.objects.all())
@@ -111,9 +121,15 @@ class FeedbackFilterTest(APITestCase):
         self.item1 = Item.objects.create(name='Widget', description='A small widget')
         self.item2 = Item.objects.create(name='Gadget', description='A useful gadget')
 
-        self.fb1 = Feedback.objects.create(item=self.item1, tenant=self.tenant_a, content='Great product', rating=5)
-        self.fb2 = Feedback.objects.create(item=self.item2, tenant=self.tenant_b, content='Decent quality', rating=3)
-        self.fb3 = Feedback.objects.create(item=self.item1, tenant=self.tenant_b, content='Average at best', rating=2)
+        self.fb1 = Feedback.objects.create(
+            item=self.item1, tenant=self.tenant_a, content='Great product', rating=5
+        )
+        self.fb2 = Feedback.objects.create(
+            item=self.item2, tenant=self.tenant_b, content='Decent quality', rating=3
+        )
+        self.fb3 = Feedback.objects.create(
+            item=self.item1, tenant=self.tenant_b, content='Average at best', rating=2
+        )
 
     def test_filter_by_content(self):
         f = FeedbackFilter({'content': 'great'}, queryset=Feedback.objects.all())
@@ -142,5 +158,7 @@ class FeedbackFilterTest(APITestCase):
         self.assertEqual(f.qs.count(), 2)
 
     def test_combined_filters(self):
-        f = FeedbackFilter({'item_name': 'widget', 'tenant_name': 'beta'}, queryset=Feedback.objects.all())
+        f = FeedbackFilter(
+            {'item_name': 'widget', 'tenant_name': 'beta'}, queryset=Feedback.objects.all()
+        )
         self.assertEqual(list(f.qs), [self.fb3])

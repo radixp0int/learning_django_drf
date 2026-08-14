@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Feedback(models.Model):
     user_email = models.EmailField()
     content = models.TextField()
@@ -8,4 +9,4 @@ class Feedback(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Feedback from {self.user_email} - Rating: {self.rating}"
+        return f'Feedback from {self.user_email} - Rating: {self.rating}'

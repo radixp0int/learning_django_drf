@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('miniapp', '0001_initial'),
     ]
@@ -14,7 +13,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Tenant',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                    ),
+                ),
                 ('name', models.CharField(max_length=100)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
             ],
@@ -22,12 +26,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Feedback',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name='ID'
+                    ),
+                ),
                 ('content', models.TextField()),
                 ('rating', models.PositiveSmallIntegerField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feedback', to='miniapp.item')),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='feedback', to='miniapp.tenant')),
+                (
+                    'item',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='feedback',
+                        to='miniapp.item',
+                    ),
+                ),
+                (
+                    'tenant',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='feedback',
+                        to='miniapp.tenant',
+                    ),
+                ),
             ],
         ),
     ]
