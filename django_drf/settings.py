@@ -22,10 +22,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-su)#yngoj7+pqo$@kh3#cvs4!ssqdy$-s+0%!j+ze@1%209@#!')
+SECRET_KEY = os.environ.get(
+    'SECRET_KEY', 'django-insecure-su)#yngoj7+pqo$@kh3#cvs4!ssqdy$-s+0%!j+ze@1%209@#!'
+)
 
 # Graceful rotation: Add old keys here to keep sessions valid during transition
-SECRET_KEY_FALLBACKS = os.environ.get('SECRET_KEY_FALLBACKS', '').split(',') if os.environ.get('SECRET_KEY_FALLBACKS') else []
+SECRET_KEY_FALLBACKS = (
+    os.environ.get('SECRET_KEY_FALLBACKS', '').split(',')
+    if os.environ.get('SECRET_KEY_FALLBACKS')
+    else []
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
@@ -50,12 +56,12 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.StandardResultsSetPagination',
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.paginator.StandardResultsSetPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
-        'core.filters.CustomOrderingFilter',
+        'core.filtering.backends.CustomOrderingFilter',
     ],
 }
 
@@ -75,8 +81,7 @@ ROOT_URLCONF = 'django_drf.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
