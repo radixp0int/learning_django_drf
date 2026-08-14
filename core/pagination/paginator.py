@@ -2,17 +2,40 @@ from django.utils import timezone
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from core.ordering import describe, get_applied_ordering
+
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'size'
     max_page_size = 100
 
-    def get_paginated_response(self, data):
+    def get_sort_info(self, request):
         """
-        Customizing the response 'envelope' to match the requested standard format.
+        Build the envelope's 'sort' block.
+
+        Prefers the ordering published by CustomOrderingFilter / ListDataMixin,
+        which is what was *actually* applied — echoing the raw ?sort= parameter
+        misreports any field the view rejected.
         """
-        request = self.request
+        applied = get_applied_ordering(request)
+        if applied is not None:
+            fields = [describe(term) for term in applied['fields']]
+            return {
+                'default': applied['default'],
+                'field': fields[0]['field'] if fields else None,
+                'direction': fields[0]['direction'] if fields else None,
+                'fields': fields,
+            }
+
+        return self.get_fallback_sort_info(request)
+
+    def get_fallback_sort_info(self, request):
+        """
+        Best-effort guess for views that paginate without either ordering
+        component. With no source of truth to consult, the raw parameter is the
+        only signal available, so it is echoed as-is.
+        """
         sort_param = request.query_params.get('sort')
 
         sort_info = {'default': True, 'field': 'created_at', 'direction': 'desc'}
@@ -45,6 +68,16 @@ class StandardResultsSetPagination(PageNumberPagination):
                     else:
                         sort_info['field'] = order
                         sort_info['direction'] = 'asc'
+
+        sort_info['fields'] = [{'field': sort_info['field'], 'direction': sort_info['direction']}]
+        return sort_info
+
+    def get_paginated_response(self, data):
+        """
+        Customizing the response 'envelope' to match the requested standard format.
+        """
+        request = self.request
+        sort_info = self.get_sort_info(request)
 
         return Response(
             {

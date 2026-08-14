@@ -1,5 +1,7 @@
 from rest_framework.response import Response
 
+from core.ordering import set_applied_ordering
+
 
 class ListDataMixin:
     """
@@ -48,27 +50,36 @@ class ListDataMixin:
         Reads ?sort=field,asc or ?sort=field,desc and sorts the list.
         Falls back to default_ordering when no sort param is provided.
         Fields not listed in sortable_fields are silently ignored.
+
+        Publishes the resolved ordering via core.ordering so the paginator
+        reports default_ordering correctly — it can't read it off the view the
+        way it reads `ordering` off an ORM view.
         """
         sort_param = request.query_params.get('sort')
+        is_default = True
 
         if sort_param:
             parts = [p.strip() for p in sort_param.split(',')]
             field = parts[0]
             direction = parts[1].lower() if len(parts) > 1 else 'asc'
+            is_default = False
         elif self.default_ordering:
             field, direction = self.default_ordering
         else:
+            set_applied_ordering(request, [], is_default=True)
             return data
 
         if self.sortable_fields and field not in self.sortable_fields:
             # Invalid field — fall back to default_ordering if set
             if self.default_ordering:
                 field, direction = self.default_ordering
-                reverse = direction == 'desc'
+                is_default = True
             else:
+                set_applied_ordering(request, [], is_default=True)
                 return data
 
         reverse = direction == 'desc'
+        set_applied_ordering(request, [f'-{field}' if reverse else field], is_default=is_default)
         data = sorted(
             data, key=lambda item: (item.get(field) is None, item.get(field, '')), reverse=reverse
         )

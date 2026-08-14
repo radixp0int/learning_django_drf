@@ -154,3 +154,42 @@ class ListDataMixinPaginationTest(APITestCase):
         response = self.view(request)
         self.assertEqual(len(response.data['data']['content']), 2)
         self.assertEqual(response.data['data']['total']['elements'], 3)
+
+
+class ListDataMixinSortReportingTest(APITestCase):
+    """
+    ListDataMixin views declare default_ordering, not `ordering`, so the
+    paginator can't read their default off the view — the mixin publishes it.
+    """
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = SampleListView.as_view()
+
+    def _sort_block(self, params=''):
+        return self.view(self.factory.get(f'/{params}')).data['data']['sort']
+
+    def test_unsorted_reports_default_ordering_not_created_at(self):
+        sort = self._sort_block()
+        # SampleListView has no created_at field at all — reporting one would be a lie.
+        self.assertTrue(sort['default'])
+        self.assertEqual(sort['field'], 'name')
+        self.assertEqual(sort['direction'], 'asc')
+
+    def test_explicit_sort_is_reported(self):
+        sort = self._sort_block('?sort=price,desc')
+        self.assertFalse(sort['default'])
+        self.assertEqual(sort['field'], 'price')
+        self.assertEqual(sort['direction'], 'desc')
+        self.assertEqual(sort['fields'], [{'field': 'price', 'direction': 'desc'}])
+
+    def test_invalid_sort_field_reports_the_default_actually_used(self):
+        sort = self._sort_block('?sort=nonexistent,desc')
+        self.assertTrue(sort['default'])
+        self.assertEqual(sort['field'], 'name')
+        self.assertEqual(sort['direction'], 'asc')
+
+    def test_sort_without_direction_reports_asc(self):
+        sort = self._sort_block('?sort=price')
+        self.assertFalse(sort['default'])
+        self.assertEqual(sort['direction'], 'asc')

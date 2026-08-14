@@ -10,15 +10,19 @@ from .serializers import FeedbackSerializer, ItemSerializer, TenantSerializer
 
 
 class ItemFilter(django_filters.FilterSet):
+    # The feedback_* filters traverse the reverse FK (Item -> many Feedback), so the
+    # join emits one row per matching Feedback. distinct=True dedupes them; django-filter
+    # only applies it when the filter actually receives a value, so unfiltered list
+    # requests pay nothing for it.
     name = django_filters.CharFilter(field_name='name', lookup_expr='icontains')
     feedback_content = django_filters.CharFilter(
-        field_name='feedback__content', lookup_expr='icontains'
+        field_name='feedback__content', lookup_expr='icontains', distinct=True
     )
     feedback_rating = django_filters.NumberFilter(
-        field_name='feedback__rating', lookup_expr='exact'
+        field_name='feedback__rating', lookup_expr='exact', distinct=True
     )
     feedback_tenant_name = django_filters.CharFilter(
-        field_name='feedback__tenant__name', lookup_expr='icontains'
+        field_name='feedback__tenant__name', lookup_expr='icontains', distinct=True
     )
 
     class Meta:

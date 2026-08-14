@@ -162,3 +162,38 @@ class FeedbackFilterTest(APITestCase):
             {'item_name': 'widget', 'tenant_name': 'beta'}, queryset=Feedback.objects.all()
         )
         self.assertEqual(list(f.qs), [self.fb3])
+
+
+class ReverseForeignKeyDistinctTest(APITestCase):
+    """
+    Filtering across the reverse FK (Item -> many Feedback) joins one row per
+    matching Feedback, so an item with several matches would appear several
+    times without distinct=True.
+    """
+
+    def setUp(self):
+        self.tenant = Tenant.objects.create(name='Acme Corp')
+        self.item = Item.objects.create(name='Widget', description='A small widget')
+        self.other = Item.objects.create(name='Gadget', description='A useful gadget')
+
+        # Three separate rating-5 feedbacks against the same item.
+        for content in ('Great', 'Excellent', 'Superb'):
+            Feedback.objects.create(item=self.item, tenant=self.tenant, content=content, rating=5)
+        Feedback.objects.create(item=self.other, tenant=self.tenant, content='Fine', rating=3)
+
+    def test_feedback_rating_returns_each_item_once(self):
+        f = ItemFilter({'feedback_rating': 5}, queryset=Item.objects.all())
+        self.assertEqual(list(f.qs), [self.item])
+
+    def test_feedback_tenant_name_returns_each_item_once(self):
+        f = ItemFilter({'feedback_tenant_name': 'acme'}, queryset=Item.objects.all())
+        self.assertEqual(f.qs.count(), 2)
+
+    def test_feedback_content_returns_each_item_once(self):
+        Feedback.objects.create(item=self.item, tenant=self.tenant, content='Great again', rating=4)
+        f = ItemFilter({'feedback_content': 'great'}, queryset=Item.objects.all())
+        self.assertEqual(list(f.qs), [self.item])
+
+    def test_unfiltered_queryset_is_untouched(self):
+        f = ItemFilter({}, queryset=Item.objects.all())
+        self.assertEqual(f.qs.count(), 2)
